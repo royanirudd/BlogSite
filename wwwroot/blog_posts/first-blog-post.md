@@ -1,9 +1,3 @@
----
-title: First Blog Post
-author: John Doe
-date: 2023-04-20
----
-
 # First Blog Post
 
 This is the content of the first blog post. You can write your blog post here using Markdown syntax.

@@ -1,23 +1,26 @@
 @page "/blog/{filename}"
 @using System.IO
 @using Markdig
+@using BlogSite.Models
+@using BlogSite.Clients
 @inject IWebHostEnvironment Environment
+@inject BlogsClient BlogsClient
 
-<PageTitle>@title</PageTitle>
+<PageTitle>@blog?.Title</PageTitle>
 
 <div class="container mt-4">
-    <h1>@title</h1>
-    <p class="text-muted">By @author on @publishDate.ToShortDateString()</p>
-    <div class="blog-content">
-        @((MarkupString)htmlContent)
-    </div>
-    
-    @if (string.IsNullOrEmpty(htmlContent))
+    @if (blog != null)
     {
-        <p>Debug Info:</p>
-        <p>Filename: @Filename</p>
-        <p>File Path: @filePath</p>
-        <p>File Exists: @File.Exists(filePath)</p>
+        <h1>@blog.Title</h1>
+        <p class="text-muted">By @blog.Author on @blog.PublishDate.ToShortDateString()</p>
+        <div class="blog-content">
+            @((MarkupString)htmlContent)
+        </div>
+    }
+    else
+    {
+        <h1>Blog Post Not Found</h1>
+        <p>Sorry, we couldn't find the blog post you're looking for.</p>
     }
 </div>
 
@@ -25,59 +28,30 @@
     [Parameter]
     public string Filename { get; set; } = "";
 
-    private string title = "";
-    private string author = "";
-    private DateTime publishDate;
+    private BlogCard? blog;
     private string htmlContent = "";
-    private string filePath = "";
 
     protected override async Task OnInitializedAsync()
     {
-        filePath = Path.Combine(Environment.WebRootPath, "blog_posts", $"{Filename}.md");
-        
-        if (File.Exists(filePath))
-        {
-            var markdown = await File.ReadAllTextAsync(filePath);
-            
-            // Parse front matter (assuming YAML-like format)
-            var lines = markdown.Split('\n');
-            if (lines[0] == "---")
-            {
-                int endIndex = Array.IndexOf(lines, "---", 1);
-                if (endIndex > 0)
-                {
-                    for (int i = 1; i < endIndex; i++)
-                    {
-                        var parts = lines[i].Split(':');
-                        if (parts.Length == 2)
-                        {
-                            var key = parts[0].Trim();
-                            var value = parts[1].Trim();
-                            switch (key.ToLower())
-                            {
-                                case "title":
-                                    title = value;
-                                    break;
-                                case "author":
-                                    author = value;
-                                    break;
-                                case "date":
-                                    if (DateTime.TryParse(value, out var date))
-                                        publishDate = date;
-                                    break;
-                            }
-                        }
-                    }
-                    markdown = string.Join('\n', lines.Skip(endIndex + 1));
-                }
-            }
+        blog = BlogsClient.GetBlogByFilename(Filename);
 
-            // Convert markdown to HTML
-            htmlContent = Markdig.Markdown.ToHtml(markdown);
+        if (blog != null)
+        {
+            var filePath = Path.Combine(Environment.WebRootPath, "blog_posts", $"{Filename}.md");
+            
+            if (File.Exists(filePath))
+            {
+                var markdown = await File.ReadAllTextAsync(filePath);
+                htmlContent = Markdig.Markdown.ToHtml(markdown);
+            }
+            else
+            {
+                htmlContent = "<p>Error: Blog content file not found.</p>";
+            }
         }
         else
         {
-            htmlContent = "";
+            htmlContent = "<p>Error: Blog post not found.</p>";
         }
     }
 }

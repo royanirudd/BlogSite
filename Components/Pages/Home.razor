@@ -1,0 +1,35 @@
+﻿@page "/"
+@using BlogSite.Models
+@using BlogSite.Clients
+@inject BlogsClient BlogsClient
+
+<PageTitle>Home</PageTitle>
+
+<div class="container mt-4">
+    <h1>Welcome to My Blog</h1>
+    <div class="row">
+        @foreach (var blog in blogs)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">@blog.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">By @blog.Author</h6>
+                        <p class="card-text">@blog.Summary</p>
+                        <p class="card-text"><small class="text-muted">Published on @blog.PublishDate.ToShortDateString()</small></p>
+                        <a href="#" class="btn btn-primary">Read More</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private BlogCard[] blogs = Array.Empty<BlogCard>();
+
+    protected override void OnInitialized()
+    {
+        blogs = BlogsClient.GetBlogs();
+    }
+}

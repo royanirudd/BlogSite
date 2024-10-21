@@ -4,13 +4,14 @@ namespace BlogSite.Clients
 {
     public class BlogsClient
     {
-        private readonly BlogCard[] _blogs = new[]
+        public BlogCard[] GetBlogs()
         {
-            new BlogCard { Id = 1, Title = "Introduction to Blazor", Summary = "Learn the basics of Blazor web development", Author = "John Doe", PublishDate = DateTime.Now.AddDays(-5) },
-            new BlogCard { Id = 2, Title = "Advanced C# Techniques", Summary = "Dive deep into C# programming", Author = "Jane Smith", PublishDate = DateTime.Now.AddDays(-3) },
-            new BlogCard { Id = 3, Title = "Web API Best Practices", Summary = "Explore best practices for building Web APIs", Author = "Bob Johnson", PublishDate = DateTime.Now.AddDays(-1) },
-        };
-
-        public BlogCard[] GetBlogs() => _blogs;
+            return new BlogCard[]
+            {
+                new BlogCard { Id = 1, Title = "First Blog Post", Summary = "This is the summary of the first blog post.", Author = "John Doe", PublishDate = DateTime.Now.AddDays(-5), File = "first-blog-post" },
+                new BlogCard { Id = 2, Title = "Second Blog Post", Summary = "This is the summary of the second blog post.", Author = "Jane Smith", PublishDate = DateTime.Now.AddDays(-3), File = "second-blog-post" },
+                new BlogCard { Id = 3, Title = "Third Blog Post", Summary = "This is the summary of the third blog post.", Author = "Bob Johnson", PublishDate = DateTime.Now.AddDays(-1), File = "third-blog-post" }
+            };
+        }
     }
 }

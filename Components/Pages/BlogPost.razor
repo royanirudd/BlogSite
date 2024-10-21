@@ -1,0 +1,83 @@
+@page "/blog/{filename}"
+@using System.IO
+@using Markdig
+@inject IWebHostEnvironment Environment
+
+<PageTitle>@title</PageTitle>
+
+<div class="container mt-4">
+    <h1>@title</h1>
+    <p class="text-muted">By @author on @publishDate.ToShortDateString()</p>
+    <div class="blog-content">
+        @((MarkupString)htmlContent)
+    </div>
+    
+    @if (string.IsNullOrEmpty(htmlContent))
+    {
+        <p>Debug Info:</p>
+        <p>Filename: @Filename</p>
+        <p>File Path: @filePath</p>
+        <p>File Exists: @File.Exists(filePath)</p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string Filename { get; set; } = "";
+
+    private string title = "";
+    private string author = "";
+    private DateTime publishDate;
+    private string htmlContent = "";
+    private string filePath = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        filePath = Path.Combine(Environment.WebRootPath, "blog_posts", $"{Filename}.md");
+        
+        if (File.Exists(filePath))
+        {
+            var markdown = await File.ReadAllTextAsync(filePath);
+            
+            // Parse front matter (assuming YAML-like format)
+            var lines = markdown.Split('\n');
+            if (lines[0] == "---")
+            {
+                int endIndex = Array.IndexOf(lines, "---", 1);
+                if (endIndex > 0)
+                {
+                    for (int i = 1; i < endIndex; i++)
+                    {
+                        var parts = lines[i].Split(':');
+                        if (parts.Length == 2)
+                        {
+                            var key = parts[0].Trim();
+                            var value = parts[1].Trim();
+                            switch (key.ToLower())
+                            {
+                                case "title":
+                                    title = value;
+                                    break;
+                                case "author":
+                                    author = value;
+                                    break;
+                                case "date":
+                                    if (DateTime.TryParse(value, out var date))
+                                        publishDate = date;
+                                    break;
+                            }
+                        }
+                    }
+                    markdown = string.Join('\n', lines.Skip(endIndex + 1));
+                }
+            }
+
+            // Convert markdown to HTML
+            htmlContent = Markdig.Markdown.ToHtml(markdown);
+        }
+        else
+        {
+            htmlContent = "";
+        }
+    }
+}
